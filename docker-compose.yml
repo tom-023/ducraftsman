@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password  # rootユーザのパスワード
+      MYSQL_DATABASE: testdb              # 初期データベース名
+    ports:
+      - "3306:3306"                       # MySQLのデフォルトポート
+    volumes:
+      - mysql_data:/var/lib/mysql         # データ永続化のためのボリューム
+
+volumes:
+  mysql_data:

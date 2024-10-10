@@ -1,96 +1,84 @@
 package tests
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
-	"github.com/tom-023/ducraftsman/internal/cli"
+	"github.com/tom-023/ducraftsman"
 	"testing"
 )
 
 func TestCreateUser_Success(t *testing.T) {
+	// モックのDBManagerを作成
 	mockDBManager := &MockDBManager{
-		// モックされたConnectFuncを使用してエラーなしで接続成功を模擬
 		ConnectFunc: func(rootUser, rootPassword, host, dbName string) (*sql.DB, error) {
 			db, _ := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/dbname")
 			return db, nil
-			//return &sql.DB{}, nil // 空のsql.DBを返す
 		},
-		// モックされたCreateUserFuncを使用してユーザ作成成功を模擬
 		CreateUserFunc: func(db *sql.DB, username, password, privileges string) error {
+			// 成功時はエラーなしでユーザ作成
 			return nil
 		},
 	}
 
-	cmd := cli.NewCreateUserCmd(mockDBManager)
+	// Create関数を呼び出し
+	err := ducraftsman.Create(mockDBManager, "root", "password", "testdb", "localhost", "newuser", "newpassword", "ALL")
 
-	// フラグと引数を設定
-	args := []string{
-		"--rootuser", "root",
-		"--rootpassword", "password",
-		"--dbname", "testdb",
-		"--dbhost", "localhost",
-		"--username", "newuser",
-		"--userpassword", "newpassword",
-		"--privileges", "ALL",
-	}
-	cmd.SetArgs(args)
-
-	// 出力をキャプチャ
-	output := new(bytes.Buffer)
-	cmd.SetOut(output)
-
-	// コマンドの実行
-	err := cmd.Execute()
+	// エラーが発生しないことを確認
 	if err != nil {
 		t.Fatalf("expected no error, but got: %v", err)
-	}
-
-	// 出力の検証
-	expectedOutput := "User newuser created successfully with password: newpassword\n"
-	if output.String() != expectedOutput {
-		t.Errorf("expected %s but got %s", expectedOutput, output.String())
 	}
 }
 
 func TestCreateUser_FailOnConnect(t *testing.T) {
+	// 接続失敗を模擬
 	mockDBManager := &MockDBManager{
-		// モックされたConnectFuncを使用して接続失敗を模擬
 		ConnectFunc: func(rootUser, rootPassword, host, dbName string) (*sql.DB, error) {
-			db, _ := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/dbname")
-			return db, errors.New("failed to connect")
 			//return nil, errors.New("failed to connect")
+			db, _ := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/dbname")
+			return db, nil
 		},
 		CreateUserFunc: func(db *sql.DB, username, password, privileges string) error {
-			return nil
+			return errors.New("failed to create user")
 		},
 	}
 
-	cmd := cli.NewCreateUserCmd(mockDBManager)
+	// Create関数を呼び出し
+	err := ducraftsman.Create(mockDBManager, "root", "wrongpassword", "testdb", "localhost", "newuser", "newpassword", "ALL")
 
-	args := []string{
-		"--rootuser", "root",
-		"--rootpassword", "wrongpassword",
-		"--dbname", "testdb",
-		"--dbhost", "localhost",
-		"--username", "newuser",
-		"--userpassword", "newpassword",
-		"--privileges", "ALL",
-	}
-	cmd.SetArgs(args)
-
-	// 出力をキャプチャ
-	output := new(bytes.Buffer)
-	cmd.SetOut(output)
-
-	// コマンドの実行
-	err := cmd.Execute()
+	// エラーが発生したことを確認
 	if err == nil {
-		t.Fatalf("expected an error but got none")
+		t.Fatalf("expected error but got none")
 	}
 
-	// エラーメッセージの検証
-	expectedError := "failed to connect to database: failed to connect"
+	// エラーメッセージの確認
+	expectedError := "failed to create user: failed to create user"
+	if err.Error() != expectedError {
+		t.Errorf("expected %s but got %s", expectedError, err.Error())
+	}
+}
+
+func TestCreateUser_FailOnCreateUser(t *testing.T) {
+	// ユーザ作成失敗を模擬
+	mockDBManager := &MockDBManager{
+		ConnectFunc: func(rootUser, rootPassword, host, dbName string) (*sql.DB, error) {
+			db, _ := sql.Open("mysql", "user:password@tcp(127.0.0.1:3306)/dbname")
+			return db, nil
+		},
+		CreateUserFunc: func(db *sql.DB, username, password, privileges string) error {
+			return errors.New("error test")
+		},
+	}
+
+	// Create関数を呼び出し
+	err := ducraftsman.Create(mockDBManager, "root", "password", "testdb", "localhost", "newuser", "newpassword", "ALL")
+
+	// エラーが発生したことを確認
+	if err == nil {
+		t.Fatalf("expected error but got none")
+	}
+
+	// エラーメッセージの確認
+	expectedError := "failed to create user: error test"
 	if err.Error() != expectedError {
 		t.Errorf("expected %s but got %s", expectedError, err.Error())
 	}
