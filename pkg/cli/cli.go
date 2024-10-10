@@ -33,7 +33,12 @@ func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, pri
 			}
 			// コマンド引数が正しく設定されているかを検証する処理などを行う
 
-			return ducraftsman.Create(dbManager, *rootUser, *rootPassword, *dbName, *dbHost, *username, *privileges)
+			err = ducraftsman.Create(dbManager, *rootUser, *rootPassword, *dbName, *dbHost, *username, *privileges)
+			if err != nil {
+				return err
+			}
+
+			return nil
 		},
 	}
 	// フラグの設定（CLIの引数を定義）

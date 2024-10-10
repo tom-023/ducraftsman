@@ -31,7 +31,6 @@ func Create(dbManager db.DBManager, rootUser, rootPassword, dbName, dbHost, user
 		return fmt.Errorf("failed to create user: %v", err)
 	}
 
-	// 成功メッセージを出力
 	fmt.Printf("User %s created successfully with password: %s\n", username, userPassword)
 	return nil
 }
