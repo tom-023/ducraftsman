@@ -7,7 +7,7 @@ import (
 )
 
 func NewRootCmd() *cobra.Command {
-	var dbType, rootUser, rootPassword, dbName, dbHost, username, userPassword, privileges string
+	var dbType, rootUser, rootPassword, dbName, dbHost, username, privileges string
 
 	// ルートコマンドの設定
 	rootCmd := &cobra.Command{
@@ -15,13 +15,13 @@ func NewRootCmd() *cobra.Command {
 		Short: "A tool for managing database users",
 	}
 
-	rootCmd.AddCommand(CreateUserCmd(&dbType, &rootUser, &rootPassword, &dbName, &dbHost, &username, &userPassword, &privileges))
+	rootCmd.AddCommand(CreateUserCmd(&dbType, &rootUser, &rootPassword, &dbName, &dbHost, &username, &privileges))
 
 	return rootCmd
 }
 
 // createコマンドにフラグを渡す形で実行する関数
-func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, userPassword, privileges *string) *cobra.Command {
+func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, privileges *string) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Create a new database user",
@@ -33,7 +33,7 @@ func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, use
 			}
 			// コマンド引数が正しく設定されているかを検証する処理などを行う
 
-			return ducraftsman.Create(dbManager, *rootUser, *rootPassword, *dbName, *dbHost, *username, *userPassword, *privileges)
+			return ducraftsman.Create(dbManager, *rootUser, *rootPassword, *dbName, *dbHost, *username, *privileges)
 		},
 	}
 	// フラグの設定（CLIの引数を定義）
@@ -43,7 +43,6 @@ func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, use
 	cmd.Flags().StringVarP(dbName, "dbname", "d", "", "Target database name (required)")
 	cmd.Flags().StringVarP(dbHost, "dbhost", "H", "localhost", "Database host (default: localhost)")
 	cmd.Flags().StringVarP(username, "username", "u", "", "Username to be created (required)")
-	cmd.Flags().StringVarP(userPassword, "userpassword", "P", "", "Password for the new user (required)")
 	cmd.Flags().StringVarP(privileges, "privileges", "g", "ALL", "Privileges to grant to the user (default: ALL)")
 
 	// 必須フラグの設定（CLIの引数を定義）
@@ -51,7 +50,6 @@ func CreateUserCmd(dbType, rootUser, rootPassword, dbName, dbHost, username, use
 	cmd.MarkFlagRequired("rootpassword")
 	cmd.MarkFlagRequired("dbname")
 	cmd.MarkFlagRequired("username")
-	cmd.MarkFlagRequired("userpassword")
 
 	return cmd
 }
